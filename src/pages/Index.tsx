@@ -19,33 +19,46 @@ const Index = () => {
 
   // Handle recordings from Chrome extension
   const handleExtensionRecording = async (transcript: string, notes: string) => {
-    console.log('New recording from extension:', { transcript: transcript.substring(0, 100) + '...', notes: notes.substring(0, 100) + '...' });
+    console.log('🎯 New recording from extension received');
     
     try {
       setIsProcessing(true);
       setProcessingError(null);
-      setProcessingStep('Processing extension recording...');
+      setHasNotes(false);
       
-      // If we have actual transcript and notes, use them
-      if (transcript && notes) {
+      // If we have actual transcript and notes from extension, use them directly
+      if (transcript && notes && transcript.trim() && notes.trim()) {
+        console.log('📝 Using provided transcript and notes from extension');
+        setProcessingStep('Processing extension recording...');
+        
+        // Add a brief delay to show processing state
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         setCurrentTranscript(transcript);
         setCurrentNotes(notes);
         setHasNotes(true);
         setIsProcessing(false);
         setProcessingStep('');
+        
+        console.log('✅ Extension recording processed successfully');
       } else {
         // Otherwise simulate processing
-        setProcessingStep('Generating transcript and notes...');
+        console.log('🔄 Simulating audio processing...');
+        setProcessingStep('Analyzing audio content...');
+        
         const result = await simulateExtensionRecording();
+        
         setCurrentTranscript(result.transcript);
         setCurrentNotes(result.notes);
         setHasNotes(true);
         setIsProcessing(false);
         setProcessingStep('');
+        
+        console.log('✅ Simulated processing completed');
       }
     } catch (error) {
-      console.error('Error processing extension recording:', error);
-      setProcessingError('Failed to process extension recording');
+      console.error('❌ Error processing extension recording:', error);
+      setProcessingError('Failed to process extension recording. Please try again.');
       setIsProcessing(false);
       setProcessingStep('');
     }
@@ -91,7 +104,8 @@ const Index = () => {
   const handleStartRecording = () => {
     setIsRecording(true);
     setProcessingError(null);
-    console.log('Recording started');
+    setHasNotes(false);
+    console.log('🎤 Recording started');
   };
 
   const handleStopRecording = () => {
@@ -100,35 +114,60 @@ const Index = () => {
     setProcessingError(null);
     setProcessingStep('Saving audio file...');
     
-    // Simulate processing steps
-    setTimeout(() => setProcessingStep('Transcribing with Whisper AI...'), 1000);
-    setTimeout(() => setProcessingStep('Generating notes with Phi-3...'), 3000);
-    setTimeout(() => setProcessingStep('Creating summary and quiz...'), 5000);
+    console.log('⏹️ Recording stopped, starting processing...');
+    
+    // Simulate processing steps with more realistic timing
+    setTimeout(() => {
+      setProcessingStep('Transcribing with Whisper AI...');
+      console.log('🎯 Transcription phase started');
+    }, 1000);
+    
+    setTimeout(() => {
+      setProcessingStep('Generating notes with Phi-3...');
+      console.log('📝 Note generation phase started');
+    }, 3000);
+    
+    setTimeout(() => {
+      setProcessingStep('Creating summary and quiz...');
+      console.log('📊 Final processing phase');
+    }, 5000);
+    
     setTimeout(() => {
       setIsProcessing(false);
       setHasNotes(true);
       setProcessingStep('');
-      // Set some mock content
-      setCurrentTranscript('This is a mock transcript from live recording.');
-      setCurrentNotes('# Mock Notes\n\nThese are mock notes from live recording.');
+      // Set some mock content for live recording
+      setCurrentTranscript('This is a mock transcript from your live recording session. The audio was captured successfully and processed using AI transcription.');
+      setCurrentNotes('# Live Recording Notes\n\n## Summary:\n- Successfully recorded audio session\n- AI transcription completed\n- Notes generated automatically\n\n## Key Points:\n- Recording quality was good\n- Processing completed in real-time\n- Ready for review and editing');
+      console.log('✅ Live recording processing completed');
     }, 7000);
   };
 
   const handleFileUpload = (file: File) => {
-    console.log('Processing uploaded file:', file.name);
+    console.log('📁 Processing uploaded file:', file.name, 'Size:', file.size);
     setIsProcessing(true);
     setProcessingError(null);
+    setHasNotes(false);
     setProcessingStep('Processing uploaded audio...');
     
-    setTimeout(() => setProcessingStep('Transcribing audio...'), 1000);
-    setTimeout(() => setProcessingStep('Generating intelligent notes...'), 3000);
+    setTimeout(() => {
+      setProcessingStep('Transcribing audio content...');
+      console.log('🎯 File transcription started');
+    }, 1000);
+    
+    setTimeout(() => {
+      setProcessingStep('Generating intelligent notes...');
+      console.log('📝 Note generation from file');
+    }, 3000);
+    
     setTimeout(() => {
       setIsProcessing(false);
       setHasNotes(true);
       setProcessingStep('');
-      // Set some mock content
-      setCurrentTranscript('This is a mock transcript from uploaded file.');
-      setCurrentNotes('# Mock Notes\n\nThese are mock notes from uploaded file.');
+      // Set some mock content for uploaded file
+      setCurrentTranscript('This is a mock transcript generated from your uploaded audio file. The file was successfully processed and converted to text.');
+      setCurrentNotes('# Uploaded File Notes\n\n## File Information:\n- Successfully uploaded and processed\n- Audio quality detected and optimized\n- Transcription completed\n\n## Content Summary:\n- Main topics identified\n- Key concepts extracted\n- Notes formatted for easy reading');
+      console.log('✅ File upload processing completed');
     }, 5000);
   };
 
