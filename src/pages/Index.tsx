@@ -6,7 +6,7 @@ import { NotesDisplay } from '@/components/NotesDisplay';
 import { QuickActions } from '@/components/QuickActions';
 import { RecentSessions } from '@/components/RecentSessions';
 import { ExtensionIntegration } from '@/components/ExtensionIntegration';
-import { processAudioFromExtension } from '@/api/audioProcessor';
+import { processAudioFromExtension, simulateExtensionRecording } from '@/api/audioProcessor';
 
 const Index = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -15,14 +15,40 @@ const Index = () => {
   const [processingStep, setProcessingStep] = useState('');
   const [currentNotes, setCurrentNotes] = useState('');
   const [currentTranscript, setCurrentTranscript] = useState('');
+  const [processingError, setProcessingError] = useState<string | null>(null);
 
   // Handle recordings from Chrome extension
-  const handleExtensionRecording = (transcript: string, notes: string) => {
-    console.log('New recording from extension:', { transcript, notes });
-    setCurrentTranscript(transcript);
-    setCurrentNotes(notes);
-    setHasNotes(true);
-    setIsProcessing(false);
+  const handleExtensionRecording = async (transcript: string, notes: string) => {
+    console.log('New recording from extension:', { transcript: transcript.substring(0, 100) + '...', notes: notes.substring(0, 100) + '...' });
+    
+    try {
+      setIsProcessing(true);
+      setProcessingError(null);
+      setProcessingStep('Processing extension recording...');
+      
+      // If we have actual transcript and notes, use them
+      if (transcript && notes) {
+        setCurrentTranscript(transcript);
+        setCurrentNotes(notes);
+        setHasNotes(true);
+        setIsProcessing(false);
+        setProcessingStep('');
+      } else {
+        // Otherwise simulate processing
+        setProcessingStep('Generating transcript and notes...');
+        const result = await simulateExtensionRecording();
+        setCurrentTranscript(result.transcript);
+        setCurrentNotes(result.notes);
+        setHasNotes(true);
+        setIsProcessing(false);
+        setProcessingStep('');
+      }
+    } catch (error) {
+      console.error('Error processing extension recording:', error);
+      setProcessingError('Failed to process extension recording');
+      setIsProcessing(false);
+      setProcessingStep('');
+    }
   };
 
   // Set up API endpoint for extension
@@ -64,12 +90,14 @@ const Index = () => {
 
   const handleStartRecording = () => {
     setIsRecording(true);
+    setProcessingError(null);
     console.log('Recording started');
   };
 
   const handleStopRecording = () => {
     setIsRecording(false);
     setIsProcessing(true);
+    setProcessingError(null);
     setProcessingStep('Saving audio file...');
     
     // Simulate processing steps
@@ -80,12 +108,16 @@ const Index = () => {
       setIsProcessing(false);
       setHasNotes(true);
       setProcessingStep('');
+      // Set some mock content
+      setCurrentTranscript('This is a mock transcript from live recording.');
+      setCurrentNotes('# Mock Notes\n\nThese are mock notes from live recording.');
     }, 7000);
   };
 
   const handleFileUpload = (file: File) => {
     console.log('Processing uploaded file:', file.name);
     setIsProcessing(true);
+    setProcessingError(null);
     setProcessingStep('Processing uploaded audio...');
     
     setTimeout(() => setProcessingStep('Transcribing audio...'), 1000);
@@ -94,6 +126,9 @@ const Index = () => {
       setIsProcessing(false);
       setHasNotes(true);
       setProcessingStep('');
+      // Set some mock content
+      setCurrentTranscript('This is a mock transcript from uploaded file.');
+      setCurrentNotes('# Mock Notes\n\nThese are mock notes from uploaded file.');
     }, 5000);
   };
 
@@ -114,6 +149,17 @@ const Index = () => {
 
         {/* Extension Integration Status */}
         <ExtensionIntegration onNewRecording={handleExtensionRecording} />
+
+        {/* Error Display */}
+        {processingError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+              <span className="text-red-800 font-medium">Processing Error</span>
+            </div>
+            <p className="text-red-700 text-sm mt-2">{processingError}</p>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -153,7 +199,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-semibold text-slate-800 mb-3">Ready to get started?</h3>
                 <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                  Start recording your class or upload an audio file to generate intelligent notes and summaries.
+                  Start recording your class, upload an audio file, or use the Chrome extension to generate intelligent notes and summaries.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button 
