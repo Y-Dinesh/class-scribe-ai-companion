@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface ExtensionRecording {
   timestamp: number;
@@ -13,38 +13,43 @@ export const useExtensionAPI = () => {
   const [lastRecording, setLastRecording] = useState<ExtensionRecording | null>(null);
   const [isExtensionConnected, setIsExtensionConnected] = useState(false);
 
-  useEffect(() => {
-    // Check if extension is available
-    const checkExtensionConnection = () => {
-      const connected = typeof window !== 'undefined' && 
-                       window.chrome && 
-                       window.chrome.storage && 
-                       window.chrome.runtime;
-      setIsExtensionConnected(!!connected);
-      return !!connected;
-    };
+  // Check if extension is available
+  const checkExtensionConnection = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    
+    try {
+      const connected = !!(window as any).chrome?.storage?.local && !!(window as any).chrome?.runtime;
+      setIsExtensionConnected(connected);
+      return connected;
+    } catch (error) {
+      console.log('Extension not available, running in test mode');
+      setIsExtensionConnected(false);
+      return false;
+    }
+  }, []);
 
-    // Check for new recordings from extension
-    const checkForRecordings = () => {
+  useEffect(() => {
+    checkExtensionConnection();
+    
+    const interval = setInterval(() => {
       if (checkExtensionConnection()) {
+        // Check for recordings from actual extension
         try {
-          window.chrome!.storage.local.get(['lastRecording'], (result) => {
-            if (window.chrome!.runtime.lastError) {
-              console.error('Chrome storage error:', window.chrome!.runtime.lastError);
+          (window as any).chrome.storage.local.get(['lastRecording'], (result: any) => {
+            if ((window as any).chrome.runtime.lastError) {
+              console.error('Chrome storage error:', (window as any).chrome.runtime.lastError);
               return;
             }
 
             if (result.lastRecording && result.lastRecording.processed) {
               const recording = result.lastRecording;
               
-              // Check if this is a new recording
               if (!lastRecording || recording.timestamp > lastRecording.timestamp) {
                 console.log('New recording detected from extension:', recording);
                 setLastRecording(recording);
                 setHasNewRecording(true);
                 
-                // Clear the processed flag to avoid re-processing
-                window.chrome!.storage.local.set({
+                (window as any).chrome.storage.local.set({
                   lastRecording: { ...recording, processed: false }
                 });
               }
@@ -54,37 +59,28 @@ export const useExtensionAPI = () => {
           console.error('Error checking for recordings:', error);
         }
       }
-    };
-
-    // Initial check
-    checkExtensionConnection();
-    
-    // Set up interval to check for recordings
-    const interval = setInterval(checkForRecordings, 2000);
-    
-    // Check immediately
-    checkForRecordings();
+    }, 2000);
     
     return () => clearInterval(interval);
-  }, [lastRecording]);
+  }, [checkExtensionConnection, lastRecording]);
 
-  const clearNewRecording = () => {
+  const clearNewRecording = useCallback(() => {
     setHasNewRecording(false);
-  };
+  }, []);
 
   // Simulate extension recording for testing
-  const simulateExtensionRecording = () => {
+  const simulateExtensionRecording = useCallback(() => {
     const mockRecording: ExtensionRecording = {
       timestamp: Date.now(),
-      transcript: "Today we discussed the fundamentals of React hooks, including useState and useEffect. We covered how to manage component state and side effects properly.",
-      notes: "# React Hooks Lesson\n\n## Key Topics:\n- useState for state management\n- useEffect for side effects\n- Component lifecycle\n\n## Important Points:\n- Always use hooks at the top level\n- Don't call hooks conditionally\n- Clean up effects to prevent memory leaks",
+      transcript: "Today we discussed the fundamentals of React hooks, including useState and useEffect. We covered how to manage component state and side effects properly. The key takeaway is that hooks allow us to use state and other React features in functional components.",
+      notes: "# React Hooks Lesson\n\n## Key Topics:\n- useState for state management\n- useEffect for side effects\n- Component lifecycle\n\n## Important Points:\n- Always use hooks at the top level\n- Don't call hooks conditionally\n- Clean up effects to prevent memory leaks\n\n## Best Practices:\n- Keep effects focused and specific\n- Use multiple useEffect hooks for different concerns\n- Always include cleanup functions when needed",
       processed: true
     };
     
-    console.log('Simulating extension recording:', mockRecording);
+    console.log('🎬 Simulating extension recording:', mockRecording);
     setLastRecording(mockRecording);
     setHasNewRecording(true);
-  };
+  }, []);
 
   return {
     hasNewRecording,

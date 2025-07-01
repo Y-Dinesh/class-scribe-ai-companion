@@ -25,37 +25,25 @@ const Index = () => {
       setIsProcessing(true);
       setProcessingError(null);
       setHasNotes(false);
+      setProcessingStep('Processing extension recording...');
       
-      // If we have actual transcript and notes from extension, use them directly
-      if (transcript && notes && transcript.trim() && notes.trim()) {
-        console.log('📝 Using provided transcript and notes from extension');
-        setProcessingStep('Processing extension recording...');
-        
-        // Add a brief delay to show processing state
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setCurrentTranscript(transcript);
-        setCurrentNotes(notes);
-        setHasNotes(true);
-        setIsProcessing(false);
-        setProcessingStep('');
-        
-        console.log('✅ Extension recording processed successfully');
-      } else {
-        // Otherwise simulate processing
-        console.log('🔄 Simulating audio processing...');
-        setProcessingStep('Analyzing audio content...');
-        
-        const result = await simulateExtensionRecording();
-        
-        setCurrentTranscript(result.transcript);
-        setCurrentNotes(result.notes);
-        setHasNotes(true);
-        setIsProcessing(false);
-        setProcessingStep('');
-        
-        console.log('✅ Simulated processing completed');
-      }
+      // Simulate processing time to show the UI working
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setProcessingStep('Analyzing transcript...');
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setProcessingStep('Generating smart notes...');
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Set the actual content from the extension
+      setCurrentTranscript(transcript);
+      setCurrentNotes(notes);
+      setHasNotes(true);
+      setIsProcessing(false);
+      setProcessingStep('');
+      
+      console.log('✅ Extension recording processed successfully');
     } catch (error) {
       console.error('❌ Error processing extension recording:', error);
       setProcessingError('Failed to process extension recording. Please try again.');
@@ -105,10 +93,12 @@ const Index = () => {
     setIsRecording(true);
     setProcessingError(null);
     setHasNotes(false);
+    setCurrentTranscript('');
+    setCurrentNotes('');
     console.log('🎤 Recording started');
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = async () => {
     setIsRecording(false);
     setIsProcessing(true);
     setProcessingError(null);
@@ -116,59 +106,69 @@ const Index = () => {
     
     console.log('⏹️ Recording stopped, starting processing...');
     
-    // Simulate processing steps with more realistic timing
-    setTimeout(() => {
+    try {
+      // Simulate processing steps
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setProcessingStep('Transcribing with Whisper AI...');
-      console.log('🎯 Transcription phase started');
-    }, 1000);
-    
-    setTimeout(() => {
-      setProcessingStep('Generating notes with Phi-3...');
-      console.log('📝 Note generation phase started');
-    }, 3000);
-    
-    setTimeout(() => {
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setProcessingStep('Generating notes with AI...');
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setProcessingStep('Creating summary and quiz...');
-      console.log('📊 Final processing phase');
-    }, 5000);
-    
-    setTimeout(() => {
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Set mock content for live recording
+      setCurrentTranscript('Welcome to today\'s lesson on advanced React patterns. We\'ll be covering several important concepts including component composition, render props, and higher-order components. These patterns help us write more reusable and maintainable React code. Component composition allows us to build complex UIs from simpler building blocks by combining components together. This approach promotes code reuse and makes our applications more modular and easier to understand.');
+      
+      setCurrentNotes('# Advanced React Patterns - Live Recording\n\n## Key Topics Covered:\n\n### Component Composition\n- Building complex UIs from simple components\n- Promotes code reuse and modularity\n- Makes applications easier to understand\n\n### Render Props Pattern\n- Sharing code between components using function props\n- Provides flexibility in component behavior\n- Enables cross-cutting concerns\n\n### Higher-Order Components (HOCs)\n- Functions that enhance components with additional functionality\n- Useful for authentication, logging, and data fetching\n- Should be used sparingly in modern React\n\n## Best Practices:\n- Keep components small and focused\n- Use composition over inheritance\n- Document component APIs clearly\n- Test components in isolation\n\n## Next Steps:\n- Practice implementing these patterns\n- Review provided code examples\n- Complete homework assignment on component refactoring');
+      
       setIsProcessing(false);
       setHasNotes(true);
       setProcessingStep('');
-      // Set some mock content for live recording
-      setCurrentTranscript('This is a mock transcript from your live recording session. The audio was captured successfully and processed using AI transcription.');
-      setCurrentNotes('# Live Recording Notes\n\n## Summary:\n- Successfully recorded audio session\n- AI transcription completed\n- Notes generated automatically\n\n## Key Points:\n- Recording quality was good\n- Processing completed in real-time\n- Ready for review and editing');
+      
       console.log('✅ Live recording processing completed');
-    }, 7000);
+    } catch (error) {
+      console.error('❌ Error processing live recording:', error);
+      setProcessingError('Failed to process recording. Please try again.');
+      setIsProcessing(false);
+      setProcessingStep('');
+    }
   };
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     console.log('📁 Processing uploaded file:', file.name, 'Size:', file.size);
     setIsProcessing(true);
     setProcessingError(null);
     setHasNotes(false);
     setProcessingStep('Processing uploaded audio...');
     
-    setTimeout(() => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setProcessingStep('Transcribing audio content...');
-      console.log('🎯 File transcription started');
-    }, 1000);
-    
-    setTimeout(() => {
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setProcessingStep('Generating intelligent notes...');
-      console.log('📝 Note generation from file');
-    }, 3000);
-    
-    setTimeout(() => {
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Set mock content for uploaded file
+      setCurrentTranscript('This is a comprehensive lecture on machine learning fundamentals. We begin with an introduction to supervised learning algorithms, focusing on linear regression as our primary example. Linear regression is a statistical method that models the relationship between a dependent variable and one or more independent variables using a linear equation. The process involves collecting data, preparing it for analysis, selecting an appropriate model, training the model using our dataset, and finally evaluating its performance on new, unseen data.');
+      
+      setCurrentNotes('# Machine Learning Fundamentals - Uploaded File\n\n## Core Concepts:\n\n### Supervised Learning\n- Uses labeled training data to make predictions\n- Includes regression and classification problems\n- Requires ground truth data for training\n\n### Linear Regression\n- Models relationships using linear equations\n- Formula: y = mx + b (slope-intercept form)\n- Finds best-fitting line through data points\n\n### Model Training Process\n1. **Data Collection**: Gather relevant dataset\n2. **Data Preparation**: Clean and preprocess data\n3. **Model Selection**: Choose appropriate algorithm\n4. **Training Phase**: Learn from training data\n5. **Evaluation**: Test on validation set\n6. **Prediction**: Apply to new data\n\n## Key Metrics:\n- Mean Squared Error (MSE) for evaluation\n- R-squared for goodness of fit\n- Cross-validation for robust testing\n\n## Important Notes:\n- Always split data into train/validation/test sets\n- Watch out for overfitting and underfitting\n- Feature selection impacts model performance\n- Regular validation prevents memorization of training data');
+      
       setIsProcessing(false);
       setHasNotes(true);
       setProcessingStep('');
-      // Set some mock content for uploaded file
-      setCurrentTranscript('This is a mock transcript generated from your uploaded audio file. The file was successfully processed and converted to text.');
-      setCurrentNotes('# Uploaded File Notes\n\n## File Information:\n- Successfully uploaded and processed\n- Audio quality detected and optimized\n- Transcription completed\n\n## Content Summary:\n- Main topics identified\n- Key concepts extracted\n- Notes formatted for easy reading');
+      
       console.log('✅ File upload processing completed');
-    }, 5000);
+    } catch (error) {
+      console.error('❌ Error processing uploaded file:', error);
+      setProcessingError('Failed to process uploaded file. Please try again.');
+      setIsProcessing(false);
+      setProcessingStep('');
+    }
   };
 
   return (
@@ -227,7 +227,13 @@ const Index = () => {
               />
             )}
             
-            {hasNotes && !isProcessing && <NotesDisplay />}
+            {hasNotes && !isProcessing && (
+              <NotesDisplay 
+                transcript={currentTranscript}
+                notes={currentNotes}
+                title="AI Generated Notes"
+              />
+            )}
             
             {!isRecording && !isProcessing && !hasNotes && (
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
