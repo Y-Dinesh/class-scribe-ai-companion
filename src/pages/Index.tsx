@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { RecordingControls } from '@/components/RecordingControls';
@@ -6,12 +5,62 @@ import { ProcessingStatus } from '@/components/ProcessingStatus';
 import { NotesDisplay } from '@/components/NotesDisplay';
 import { QuickActions } from '@/components/QuickActions';
 import { RecentSessions } from '@/components/RecentSessions';
+import { ExtensionIntegration } from '@/components/ExtensionIntegration';
+import { processAudioFromExtension } from '@/api/audioProcessor';
 
 const Index = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasNotes, setHasNotes] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
+  const [currentNotes, setCurrentNotes] = useState('');
+  const [currentTranscript, setCurrentTranscript] = useState('');
+
+  // Handle recordings from Chrome extension
+  const handleExtensionRecording = (transcript: string, notes: string) => {
+    console.log('New recording from extension:', { transcript, notes });
+    setCurrentTranscript(transcript);
+    setCurrentNotes(notes);
+    setHasNotes(true);
+    setIsProcessing(false);
+  };
+
+  // Set up API endpoint for extension
+  useEffect(() => {
+    // Create a simple API endpoint that the extension can call
+    const handleExtensionAPI = async (request: any) => {
+      if (request.url?.includes('/api/process-audio')) {
+        try {
+          const formData = await request.formData();
+          const audioFile = formData.get('audio') as File;
+          
+          if (audioFile) {
+            const result = await processAudioFromExtension(audioFile);
+            return new Response(JSON.stringify(result), {
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+        } catch (error) {
+          console.error('API Error:', error);
+          return new Response(JSON.stringify({ error: 'Processing failed' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+      }
+    };
+
+    // This is a simple way to handle API calls - in production you'd use a proper server
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleExtensionAPI);
+    }
+
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleExtensionAPI);
+      }
+    };
+  }, []);
 
   const handleStartRecording = () => {
     setIsRecording(true);
@@ -62,6 +111,9 @@ const Index = () => {
             Record lectures, generate intelligent notes, and create study materials with the power of AI
           </p>
         </div>
+
+        {/* Extension Integration Status */}
+        <ExtensionIntegration onNewRecording={handleExtensionRecording} />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
