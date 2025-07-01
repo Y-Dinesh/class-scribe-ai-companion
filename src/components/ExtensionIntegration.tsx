@@ -16,7 +16,7 @@ export const ExtensionIntegration: React.FC<ExtensionIntegrationProps> = ({ onNe
     }
   }, [hasNewRecording, lastRecording, onNewRecording, clearNewRecording]);
 
-  const isExtensionConnected = typeof chrome !== 'undefined' && chrome.storage;
+  const isExtensionConnected = typeof window !== 'undefined' && window.chrome && window.chrome.storage;
 
   return (
     <div className="mb-6">

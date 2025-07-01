@@ -15,8 +15,8 @@ export const useExtensionAPI = () => {
   useEffect(() => {
     // Check for new recordings from extension every 2 seconds
     const checkForRecordings = () => {
-      if (typeof chrome !== 'undefined' && chrome.storage) {
-        chrome.storage.local.get(['lastRecording'], (result) => {
+      if (typeof window !== 'undefined' && window.chrome && window.chrome.storage) {
+        window.chrome.storage.local.get(['lastRecording'], (result) => {
           if (result.lastRecording && result.lastRecording.processed) {
             const recording = result.lastRecording;
             
@@ -26,7 +26,7 @@ export const useExtensionAPI = () => {
               setHasNewRecording(true);
               
               // Clear the processed flag to avoid re-processing
-              chrome.storage.local.set({
+              window.chrome.storage.local.set({
                 lastRecording: { ...recording, processed: false }
               });
             }
